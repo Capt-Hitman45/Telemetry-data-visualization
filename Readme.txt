@@ -26,13 +26,12 @@ python code running :
 frontend running process :
 
 /        open new terminal 
-         type:  cd build                                 #redirects to build folder located in the project folder  
-                npm i                                    #installs the dependencies present in the package.json
-                npm start                                #runs the webpage in your local host       /
+         type:  npm i                                    #installs the dependencies present in the package.json
+                npm start                                #runs the webpage in your local host        /
 
 
 hosting with same network connection:
 
 /           cd build
-            serve -l 3000
+            serve -l 3000         /
 
