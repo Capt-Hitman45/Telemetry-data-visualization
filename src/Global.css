@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+body {
+  background: radial-gradient(circle, #000428, #004e92);
+  color: goldenrod;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.neon-text {
+  text-shadow: 0 0 5px #001F3F, 0 0 10px #001F3F, 0 0 20px #001F3F, 0 0 40px #001F3F;
+  .animate-glow {
+    animation: glow 1s infinite alternate;
+  }
+}
+
+.neon-border {
+  border: 2px solid #001F3F;
+  box-shadow: 0 0 5px #001F3F, 0 0 10px #001F3F, 0 0 20px #001F3F, 0 0 40px #001F3F;
+  .animate-glow {
+    animation: glow 1s infinite alternate;
+  }
+}
+
+.neon-glow {
+  box-shadow: 0 0 5px #001F3F, 0 0 10px #001F3F, 0 0 20px #001F3F, 0 0 40px #001F3F;
+  .animate-glow {
+    animation: glow 1s infinite alternate;
+  }
+}
+
+.stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: -1;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 2s infinite;
+}
+
+/* Falling Stars */
+.falling-star {
+    position: absolute;
+    width: 2px;
+    height: 10px;
+    background-color: white;
+    opacity: 0.8;
+    transform: rotate(-30deg);
+    animation: fall linear infinite;
+  }
+  
+  /* Comets */
+  .comet {
+    position: absolute;
+    width: 45px;
+    height: 9px;
+    background: linear-gradient(to right, white, transparent);
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: comet linear infinite;
+  }
+  
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes fall {
+    0% {
+      transform: translateY(0) translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(300px) translateX(-50px);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes comet {
+    0% {
+      transform: translateX(0) translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(-400px) translateY(100px);
+      opacity: 0;
+    }
+  }
+
+  /* Falling Star Animation */
+@keyframes fall {
+    0% {
+      transform: translateY(0) translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(200px) translateX(-30px);
+      opacity: 0;
+    }
+  }
+  
+  /* Comet Animation */
+  @keyframes comet {
+    0% {
+      transform: translateX(0) translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(-400px) translateY(100px);
+      opacity: 0;
+    }
+  }
+  
+  .animate-twinkle {
+    animation: twinkle 2s infinite alternate ease-in-out;
+  }
+  
+  .animate-fall {
+    animation: fall linear infinite;
+  }
+  
+  .animate-comet {
+    animation: comet linear infinite;
+  }
+
+  .stars-container {
+    position: fixed;  /* Ensures it stays in place even when scrolling */
+    top: 0;
+    left: 0;
+    width: 100vw;  /* Covers full screen width */
+    height: 100vh; /* Covers full screen height */
+    pointer-events: none; /* Ensures stars don’t block clicks */
+    overflow: hidden; /* Prevents unnecessary scrollbars */
+    z-index: -1; /* Push behind other content */
+  }
+  
+  
+  

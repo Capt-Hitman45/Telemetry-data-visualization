@@ -1,0 +1,59 @@
+{
+    "200": [
+        "Panel reading", 
+        "0 ",
+        "1 ", 
+        "2 ",
+        "3 ", 
+        "4 ",
+        "Conv MPPT reading",
+        "0 ",
+        "1 ", 
+        "2 ",
+        "3 ", 
+        "4 ",
+        "O/P Conv Volt",
+        "0 ",
+        "1 ", 
+        "2 ",
+        "3 ", 
+        "4 ",
+        "Totl Btry reading",
+        "EPS Port PWR status:",
+        "CHNL[OBC]",
+        "CHNL[UHF]",
+        "CHNL[ADCS]",
+        "CHNL[S_BAND]",
+        "Btry Temprature Sensor Reading",
+        "Btry temp [00]",
+        "Btry temp [01]",
+        "Btry temp [02]",
+        "Btry temp [03]",
+        "Btry temp [04]",
+        "Btry temp [05]",
+        "Btry temp [06]", 
+        "Btry temp [07]",
+        "HRM release status", 
+        "Btry_Chrg_Sts", 
+        "EPS_MODE"
+    ],
+    "211": [
+        "CHNL[S_BAND] power ON request"
+    ],
+    "212": [
+        "EPS STATUS ",
+        "HRM",
+        "OBC",
+        "PL_SERVER",
+        "GPS",
+        "ADCS",
+        "UHF",
+        "S_BAND",
+        "EDGE",
+        "PL_1 "
+    ],
+    "256": [    
+        "OBC version", 
+        "NVM version"
+    ]
+}

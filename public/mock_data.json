@@ -1,0 +1,25 @@
+{
+  "satellites": [
+    {
+      "name": "Satellite A",
+      "subsystems": [
+        {
+          "name": "Power",
+          "data": [
+            { "timestamp": "2023-10-01 12:00:00", "temperature": 25.6 },
+            { "timestamp": "2023-10-01 12:01:00", "temperature": 28.1 }
+          ]
+        },
+        {
+          "name": "Temperature",
+          "data": [
+            { "timestamp": "2023-10-01 12:00:00", "value": 25.6 },
+            { "timestamp": "2023-10-01 12:01:00", "value": 26.1 },
+            { "timestamp": "2023-10-01 12:02:00", "value": 26.6 },
+            { "timestamp": "2023-10-01 12:03:00", "value": 27.1 }
+          ]
+        }
+      ]
+    }
+  ]
+}
