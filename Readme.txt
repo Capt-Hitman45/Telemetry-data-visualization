@@ -4,6 +4,10 @@ flow :
 
 
 
+********* make sure that NPM is already installed in your device ***********
+
+
+
 backend running process :
 
 /      open new terminal
