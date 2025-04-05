@@ -8,6 +8,7 @@ backend running process :
 
 /      open new terminal
        type:  cd backend                               #redirects to backend folder located in the project folder
+              npm install                              #installs required dependencies
               node server.js
 
     server will run in localserver host port 4000    /
@@ -17,6 +18,7 @@ python code running :
           
 /       open new terminal
         type:   cd python                               #redirects to python folder located in the project folder
+                pip install -r requirements.txt         #Install Python dependencies
                 python3 telemetry_parser.py             #runs pythoncode named telemetry_parser.py
 
     this python code will parses the logfile and stores the data in the mongo db separately according to the subsystems      
