@@ -11,7 +11,7 @@ import Stars from "../ui/Stars";
 const VisualizationPage = () => {
   const location = useLocation();
   const { satellite = { name: "Unknown Satellite" }, dbName = "Unknown Database", collection = "Unknown Collection" } = location.state || {};
-  
+
   const [rawData, setRawData] = useState([]);
   const [processedData, setProcessedData] = useState([]);
   const [parameters, setParameters] = useState([]);
@@ -27,150 +27,114 @@ const VisualizationPage = () => {
     return textValueMappings.hasOwnProperty(param);
   };
 
-  // Simplify text-based data for plotting
-  const simplifyTextData = (data, param) => {
-    if (data.length === 0) return [];
-
-    const simplifiedData = [];
-    let previousValue = null;
-
-    data.forEach((entry, index) => {
-      const value = entry[param];
-      const numericValue = textValueMappings[param]?.[value] ?? value;
-
-      if (index === 0 || numericValue !== previousValue) {
-        simplifiedData.push({ 
-          x: entry.tm_received_time, 
-          y: numericValue, 
-          tm_id: entry.tm_id 
-        });
-      }
-      previousValue = numericValue;
-    });
-
-    return simplifiedData;
-  };
-
   // Process data whenever rawData changes
   useEffect(() => {
     const processData = () => {
       if (!rawData || rawData.length === 0) return;
-  
+
       const allParameters = new Set();
       const textMappings = {};
       const formattedData = [];
-  
-      // Process each entry
-      rawData.forEach(entry => {
+
+      rawData.forEach((entry) => {
         if (!entry) return;
-  
-        // Add parameter to tracking
+
         if (entry.parameter) {
           allParameters.add(entry.parameter);
         }
-  
-        // Check for text parameters
+
         if (entry.value && isNaN(entry.value)) {
           if (!textMappings[entry.parameter]) {
             textMappings[entry.parameter] = new Set();
           }
           textMappings[entry.parameter].add(entry.value);
         }
-  
-        // Create formatted entry
+
         const formattedEntry = {
           tm_received_time: entry.tm_received_time,
           tm_id: entry.tm_id,
-          [entry.parameter]: isNaN(entry.value) ? entry.value : parseFloat(entry.value)
+          local_date_time: entry.local_date_time, // Include local date time
+          [entry.parameter]: isNaN(entry.value) ? entry.value : parseFloat(entry.value),
         };
-        
+
         formattedData.push(formattedEntry);
       });
-  
-      // Create text value mappings
+
       const finalTextMappings = {};
-      Object.keys(textMappings).forEach(param => {
+      Object.keys(textMappings).forEach((param) => {
         finalTextMappings[param] = Array.from(textMappings[param]).reduce((acc, val, idx) => {
           acc[val] = idx + 1;
           return acc;
         }, {});
       });
-  
-      // Sort parameters
+
       const sortedParameters = Array.from(allParameters).sort((a, b) => {
         const aIsVoltage = a.includes("voltage");
         const bIsVoltage = b.includes("voltage");
         const aIsCurrent = a.includes("current");
         const bIsCurrent = b.includes("current");
-  
+
         if (aIsVoltage && !bIsVoltage) return -1;
         if (bIsVoltage && !aIsVoltage) return 1;
         if (aIsCurrent && !bIsCurrent) return -1;
         if (bIsCurrent && !aIsCurrent) return 1;
         return a.localeCompare(b);
       });
-  
-      // Actually use the formattedData we created
+
       setProcessedData(formattedData);
       setTextValueMappings(finalTextMappings);
       setParameters(sortedParameters);
+
+      // Update timeRange.end if new data exceeds current end
+      const timestamps = formattedData.map((entry) => entry.tm_received_time);
+      if (timestamps.length > 0) {
+        const minTime = Math.min(...timestamps);
+        const maxTime = Math.max(...timestamps);
+        setTimeRange(prev => {
+          const newStart = prev.start ? Math.min(prev.start, minTime) : minTime;
+          const newEnd = prev.end ? Math.max(prev.end, maxTime) : maxTime;
+          return {
+            start: newStart.toString(),
+            end: newEnd.toString(),
+          };
+        });
+      }
     };
-  
+
     processData();
   }, [rawData]);
-  
+
   useEffect(() => {
-  const fetchInitialData = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:4000/api/telemetry?collection=${collection}`
-      );
-      const data = await response.json();
-      console.log("Raw API response:", data); // Debug output
-      setRawData(data);
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-    }
-  };
-  fetchInitialData();
-}, [collection]);
+    if (!collection || collection === "Unknown Collection") return;
 
-useEffect(() => {
-  if (!collection || collection === "Unknown Collection") return;
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch(`http://localhost:4000/api/telemetry?collection=${collection}`);
+        const data = await response.json();
+        console.log("Raw API response:", data);
+        setRawData(data);
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      }
+    };
 
-  // Fetch initial data
-  const fetchInitialData = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:4000/api/telemetry?collection=${collection}`
-      );
-      const data = await response.json();
-      setRawData(data);
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-    }
-  };
+    fetchInitialData();
 
-  fetchInitialData();
-
-    // 2. Set up SSE for real-time updates
-    const eventSource = new EventSource(
-      `http://localhost:4000/api/telemetry/updates?collection=${collection}`
-    );
+    const eventSource = new EventSource(`http://localhost:4000/api/telemetry/updates?collection=${collection}`);
 
     eventSource.onmessage = (event) => {
-      if (event.data === ':ping') return;
-      
+      if (event.data === ":ping") return;
+
       try {
         const newData = JSON.parse(event.data);
-        setRawData(prevData => {
-          // Check if this is a duplicate
-          const exists = prevData.some(item => 
-            item.tm_received_time === newData.tm_received_time && 
-            item.tm_id === newData.tm_id && 
-            item.parameter === newData.parameter
+        setRawData((prevData) => {
+          const exists = prevData.some(
+            (item) =>
+              item.tm_received_time === newData.tm_received_time &&
+              item.tm_id === newData.tm_id &&
+              item.parameter === newData.parameter
           );
-          
+
           return exists ? prevData : [...prevData, newData];
         });
       } catch (error) {
@@ -180,13 +144,12 @@ useEffect(() => {
 
     eventSource.onerror = (error) => {
       console.error("SSE connection error:", error);
-      // Implement reconnection logic here if needed
     };
 
     return () => {
       eventSource.close();
     };
-}, [collection]);
+  }, [collection]);
 
   // Filter data based on time range
   const filteredData = useMemo(() => {
@@ -199,9 +162,7 @@ useEffect(() => {
 
   // Handle parameter selection
   const handleSelectionChange = (param, checked) => {
-    setSelectedParams((prev) => 
-      checked ? [...prev, param] : prev.filter((p) => p !== param)
-    );
+    setSelectedParams((prev) => (checked ? [...prev, param] : prev.filter((p) => p !== param)));
   };
 
   // Handle "All Parameters" selection
@@ -218,21 +179,34 @@ useEffect(() => {
   const groupParameters = (params) => {
     const groups = {};
     params.forEach((param) => {
-      const base = param.replace(/(_voltage|_current|_\d+)$/, '');
+      const base = param.replace(/(_voltage|_current|_\d+)$/, "");
       if (!groups[base]) groups[base] = [];
       groups[base].push(param);
     });
     return groups;
   };
 
-  // Grouped parameters for dropdown
+  // Split grouped parameters into boolean and numeric groups
   const groupedParams = useMemo(() => {
-    const groups = groupParameters(selectedParams.filter((param) => param !== "All Parameters"));
+    const allGroups = groupParameters(selectedParams.filter((param) => param !== "All Parameters"));
     if (selectedParams.includes("All Parameters")) {
-      groups["All Parameters"] = parameters;
+      allGroups["All Parameters"] = parameters;
     }
-    return groups;
-  }, [selectedParams, parameters]);
+
+    const booleanGroups = {};
+    const numericGroups = {};
+
+    Object.keys(allGroups).forEach((groupKey) => {
+      const params = allGroups[groupKey];
+      if (params.some(isTextParam)) {
+        booleanGroups[groupKey] = params.filter(isTextParam);
+      } else {
+        numericGroups[groupKey] = params;
+      }
+    });
+
+    return { booleanGroups, numericGroups };
+  }, [selectedParams, parameters, textValueMappings]);
 
   // Handle downloading chart as PNG
   const handleDownload = (chartId, startTime, endTime) => {
@@ -262,14 +236,14 @@ useEffect(() => {
 
     if (!isFullScreen) {
       chartContainer.requestFullscreen?.() ||
-      chartContainer.mozRequestFullScreen?.() ||
-      chartContainer.webkitRequestFullscreen?.() ||
-      chartContainer.msRequestFullscreen?.();
+        chartContainer.mozRequestFullScreen?.() ||
+        chartContainer.webkitRequestFullscreen?.() ||
+        chartContainer.msRequestFullscreen?.();
     } else {
       document.exitFullscreen?.() ||
-      document.mozCancelFullScreen?.() ||
-      document.webkitExitFullscreen?.() ||
-      document.msExitFullscreen?.();
+        document.mozCancelFullScreen?.() ||
+        document.webkitExitFullscreen?.() ||
+        document.msExitFullscreen?.();
     }
   };
 
@@ -285,33 +259,35 @@ useEffect(() => {
   // Handle insights generation
   const handleDrawInsights = () => {
     const insights = [];
-    
-    // Numeric parameter insights
-    parameters.filter(p => !isTextParam(p)).forEach((param) => {
-      const values = filteredData
-        .map(entry => parseFloat(entry[param]))
-        .filter(val => !isNaN(val));
-      
-      if (values.length > 0) {
-        const min = Math.min(...values);
-        const max = Math.max(...values);
-        const avg = values.reduce((a, b) => a + b, 0) / values.length;
-        insights.push(`${param}: Min ${min.toFixed(2)}, Max ${max.toFixed(2)}, Avg ${avg.toFixed(2)}`);
-      }
-    });
 
-    // Text parameter insights
+    parameters
+      .filter((p) => !isTextParam(p))
+      .forEach((param) => {
+        const values = filteredData
+          .map((entry) => parseFloat(entry[param]))
+          .filter((val) => !isNaN(val));
+
+        if (values.length > 0) {
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const avg = values.reduce((a, b) => a + b, 0) / values.length;
+          if (!isNaN(min) && !isNaN(max) && !isNaN(avg)) {
+            insights.push(`${param}: Min ${min.toFixed(2)}, Max ${max.toFixed(2)}, Avg ${avg.toFixed(2)}`);
+          }
+        }
+      });
+
     parameters.filter(isTextParam).forEach((param) => {
       const valueCounts = {};
-      filteredData.forEach(entry => {
+      filteredData.forEach((entry) => {
         const val = entry[param];
         if (val) valueCounts[val] = (valueCounts[val] || 0) + 1;
       });
-      
+
       const stats = Object.entries(valueCounts)
         .map(([val, count]) => `${val} (${count})`)
         .join(", ");
-      
+
       if (stats) insights.push(`${param}: ${stats}`);
     });
 
@@ -373,25 +349,27 @@ useEffect(() => {
 
       {selectedParams.length > 0 && (
         <>
-          {selectedParams.some(isTextParam) ? (
+          {Object.keys(groupedParams.booleanGroups).length > 0 && (
             <BooleanGraphs
-              groupedParams={groupedParams}
-              simplifyTextData={simplifyTextData}
+              groupedParams={groupedParams.booleanGroups}
               filteredData={filteredData}
               timeRange={timeRange}
               isFullScreen={isFullScreen}
               toggleFullScreen={toggleFullScreen}
               handleDownload={handleDownload}
+              setSelectedParams={setSelectedParams}
               textValueMappings={textValueMappings}
             />
-          ) : (
+          )}
+          {Object.keys(groupedParams.numericGroups).length > 0 && (
             <NormalGraphs
-              groupedParams={groupedParams}
+              groupedParams={groupedParams.numericGroups}
               filteredData={filteredData}
               timeRange={timeRange}
               isFullScreen={isFullScreen}
               toggleFullScreen={toggleFullScreen}
               handleDownload={handleDownload}
+              setSelectedParams={setSelectedParams}
             />
           )}
         </>
